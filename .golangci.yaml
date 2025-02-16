@@ -1,0 +1,35 @@
+run:
+  timeout: 5m
+  tests: true
+
+linters-settings:
+  govet:
+    shadow: true
+
+  errcheck:
+    check-type-assertions: true
+    check-blank: true
+
+  staticcheck:
+    checks: [ "all" ]
+
+  gocyclo:
+    min-complexity: 15
+
+  dupl:
+    threshold: 100
+
+linters:
+  enable:
+    - govet
+    - errcheck
+    - staticcheck
+    - gocyclo
+    - dupl
+    - unparam
+    - unused
+
+output:
+  formats: tab
+  print-issued-lines: true
+  severity: warning

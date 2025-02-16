@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  avito-shop-service:
+    build:
+      context: .
+      args:
+        CONFIG_PATH: /go/src/avito-shop/pkg/auth/jwt_key/config.yaml
+    container_name: avito-shop-service
+    ports:
+      - "8080:8080"
+    environment:
+      - DATABASE_URL=postgres://postgres:password@db:5432/shop
+      - TEST_DATABASE_URL=postgres://user:test@test_db:5432/shop
+      - TEST_MODE=false
+      - SERVER_PORT=8080
+      - CONFIG_PATH=/go/src/avito-shop/pkg/auth/jwt_key/config.yaml
+    depends_on:
+      db:
+        condition: service_healthy
+      test_db:
+        condition: service_healthy
+    networks:
+      - internal
+
+  db:
+    image: postgres:13
+    container_name: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: shop
+    volumes:
+      - ./migrations/:/docker-entrypoint-initdb.d/
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d shop"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    networks:
+      - internal
+
+  test_db:
+    image: postgres:13
+    container_name: postgres_test
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: shop
+    volumes:
+      - ./migrations_test/:/docker-entrypoint-initdb.d/
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U user -d shop" ]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    networks:
+      - internal
+
+networks:
+  internal:
